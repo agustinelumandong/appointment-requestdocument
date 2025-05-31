@@ -95,8 +95,9 @@
                 <!-- Step 2: For Whom -->
                 <div class="booking-step" id="doc-step2">
                     <h3 class="mb-4">Request For</h3>
-                    <button class="btn btn-outline-primary me-2" data-for="self">For Myself</button>
-                    <button class="btn btn-outline-secondary" data-for="other">For Someone Else</button>
+                    <div class="row" id="for-whom-container">
+                        <!-- For whom will be inserted here by JS -->
+                    </div>
                 </div>
                 <!-- Step 3: Application Form -->
                 <div class="booking-step" id="doc-step3">
