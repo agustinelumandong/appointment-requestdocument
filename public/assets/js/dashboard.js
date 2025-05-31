@@ -270,7 +270,6 @@ $(document).ready(function() {
         $(".progress-bar-steps .progress").css("width", `${progress}%`);
     }
 
-
     function updateNavigationButtons() {
         // Enable/disable previous button
         if (bookingState.currentStep === 1) {
@@ -286,7 +285,6 @@ $(document).ready(function() {
             $("#next-step").html('Next <i class="bi bi-arrow-right"></i>');
         }
     }
-
 
     function validateStep(step) {
         switch (step) {
@@ -322,7 +320,6 @@ $(document).ready(function() {
                 return true;
         }
     }
-
 
     function updateServicesStep(categoryId) {
         // Show loading state if needed
@@ -392,8 +389,6 @@ $(document).ready(function() {
             }
         });
     }
-
-
 
     function updateEmployeesStep(serviceId) {
         // Show loading state
@@ -553,7 +548,6 @@ $(document).ready(function() {
         renderCalendar(month, yearNum);
     }
 
-
     function updateCalendar() {
         // Update employee name display
         const employee = bookingState.selectedEmployee;
@@ -702,8 +696,6 @@ $(document).ready(function() {
         });
     }
 
-
-
     function updateSummary() {
         // Find the selected category
         const selectedCategory = categories.find(cat => cat.id == bookingState.selectedCategory);
@@ -737,10 +729,6 @@ $(document).ready(function() {
                 `${formattedDate} at ${bookingState.selectedTime.display || bookingState.selectedTime}`);
         }
     }
-
-
-
-    // function submitBooking() {
 
     function submitBooking() {
         // Get form data

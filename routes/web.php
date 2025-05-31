@@ -12,6 +12,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocumentRequestController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
@@ -121,4 +122,6 @@ Route::post('/appointments/update-status', [AppointmentController::class, 'updat
 //update status from dashbaord
 Route::post('/update-status', [DashboardController::class, 'updateStatus'])->name('dashboard.update.status');
 
-
+Route::get('/document-request', [DocumentRequestController::class, 'showForm'])->name('document.request');
+Route::post('/document-request', [DocumentRequestController::class, 'store'])->name('document.request.store');
+Route::get('/document-request/status/{reference}', [DocumentRequestController::class, 'status'])->name('document.request.status');
