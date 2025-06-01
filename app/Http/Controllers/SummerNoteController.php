@@ -21,7 +21,7 @@ class SummerNoteController extends Controller
             // Store the image in the specified folder
             //$image->storeAs($folder, $filename);
 
-            $image->move(public_path('/uploads/images/summernote/'),$filename);
+            $image->move(public_path('/uploads/images/summernote/'), $filename);
             //$data['image'] = $imageName;
 
             // Get the URL of the uploaded image
@@ -43,8 +43,8 @@ class SummerNoteController extends Controller
 
 
         // Define the folder where the images are stored
-       // $folder = '/uploads/images/summernote/';
-        $destination = public_path('uploads/images/summernote/').$filename;
+        // $folder = '/uploads/images/summernote/';
+        $destination = public_path('uploads/images/summernote/') . $filename;
 
         // Delete the image from the server folder
         if (\File::exists($destination)) {

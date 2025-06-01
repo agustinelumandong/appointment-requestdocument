@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\LocationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SettingController;
@@ -125,3 +126,4 @@ Route::post('/update-status', [DashboardController::class, 'updateStatus'])->nam
 Route::get('/document-request', [DocumentRequestController::class, 'showForm'])->name('document.request');
 Route::post('/document-request', [DocumentRequestController::class, 'store'])->name('document.request.store');
 Route::get('/document-request/status/{reference}', [DocumentRequestController::class, 'status'])->name('document.request.status');
+

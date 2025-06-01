@@ -23,13 +23,13 @@ $(document).ready(function() {
     // Step 1: Render document types
     let docTypeHtml = '';
     documentTypes.forEach(dt => {
-        docTypeHtml += 
+        docTypeHtml +=
         `<div class="col-md-4 mb-3">
             <div class="card doc-type-card" data-type="${dt.slug}">
                 <div class="card-body text-center">
                     <h5>${dt.name}</h5>
                     <p>${dt.description || ''}</p>
-                </div> 
+                </div>
             </div>
         </div>`;
     });
@@ -58,7 +58,7 @@ $(document).ready(function() {
     });
 
     // Step 3: Dynamic form
-    
+
 
     // Step 4: Purpose & Contact
     $('#purpose-contact-form input, #purpose-contact-form select').on('input change', function() {
@@ -75,7 +75,7 @@ $(document).ready(function() {
         docState[$(this).attr('id')] = $(this).val();
     });
 
-    
+
 
     // Submit
     $('#submit-request').click(function() {
@@ -113,8 +113,30 @@ $(document).ready(function() {
                 if (!docState.forWhom) { alert('Select for whom.'); return false; }
                 break;
             case 3:
-                if (!$('#application-form')[0].checkValidity()) { $('#application-form')[0].reportValidity(); return false; }
-                break;
+                // Add debugging for death certificate
+            if (docState.documentType === 'death-certificate') {
+                const form = $('#application-form')[0];
+                const invalidFields = [];
+
+                // Check each required field
+                $(form).find('[required]').each(function() {
+                    if (!this.checkValidity()) {
+                        invalidFields.push(this.name || this.id);
+                    }
+                });
+
+                if (invalidFields.length > 0) {
+                    console.log('Invalid fields:', invalidFields);
+                    alert(`Please fill in all required fields`);
+                    return false;
+                }
+            }
+
+            if (!$('#application-form')[0].checkValidity()) {
+                $('#application-form')[0].reportValidity();
+                return false;
+            }
+            break;
             case 4:
                 if (!$('#purpose-contact-form')[0].checkValidity()) { $('#purpose-contact-form')[0].reportValidity(); return false; }
                 break;
@@ -157,22 +179,22 @@ function renderForWhom() {
     if(docState.documentType === 'birth-certificate'){
         html += `<div class="col-md-6">
             <button class="btn btn-outline-primary me-2 w-100 h-100" style="height: 100px;" data-for="self">For Myself</button>
-                    
+
         </div><div class="col-md-6">
             <button class="btn btn-outline-secondary w-100 h-100" style="height: 100px;" data-for="other">For Someone Else</button>
-                    
+
         </div>`;
     }else if(docState.documentType === 'marriage-contract'){
         html += `<div class="col-md-6">
             <button class="btn btn-outline-primary me-2 w-100 h-100" style="height: 100px;" data-for="self">For Myself</button>
-                    
+
         </div><div class="col-md-6">
             <button class="btn btn-outline-secondary w-100 h-100" style="height: 100px;" data-for="other">For Someone Else</button>
-                    
+
         </div>`;
     }else if(docState.documentType === 'death-certificate'){
         html += ` <div class="col-md-6 mb-3">
-            <button class="btn btn-outline-secondary w-100 h-100" style="height: 100px;" data-for="spouse">My Spouse</button>   
+            <button class="btn btn-outline-secondary w-100 h-100" style="height: 100px;" data-for="spouse">My Spouse</button>
         </div>
         <div class="col-md-6 mb-3">
             <button class="btn btn-outline-secondary w-100 h-100" style="height: 100px;" data-for="son">My Son</button>
@@ -277,7 +299,7 @@ function renderApplicationForm() {
                 <option value="31">31</option>
             </select>
         </div>
-        <div class="col">  
+        <div class="col">
             <select class="form-select" name="birth_year" required>
                 <option value="">Year</option>
                 <option value="2025">2025</option>
@@ -306,8 +328,8 @@ function renderApplicationForm() {
                 <option value="2002">2002</option>
                 <option value="2001">2001</option>
                 <option value="2000">2000</option>
-                <option value="1999">1999</option>  
-                <option value="1998">1998</option>  
+                <option value="1999">1999</option>
+                <option value="1998">1998</option>
                 <option value="1997">1997</option>
                 <option value="1996">1996</option>
                 <option value="1995">1995</option>
@@ -354,15 +376,15 @@ function renderApplicationForm() {
         </div>
     </div>
 </div>
-        
-       
+
+
         <div class="col-md-4">
             <label class="form-label">Father's First Name</label>
             <input type="text" class="form-control" name="father_first_name" placeholder="First Name" required>
         </div>
         <div class="col-md-4">
             <label class="form-label">Father's Middle Name</label>
-            <input type="text" class="form-control" name="father_middle_name" placeholder="Middle Name" required>
+            <input type="text" class="form-control" name="father_middle_name" placeholder="Middle Name" >
         </div>
         <div class="col-md-4">
             <label class="form-label">Father's Last Name</label>
@@ -375,14 +397,14 @@ function renderApplicationForm() {
         </div>
         <div class="col-md-4">
             <label class="form-label">Mother's Middle Name</label>
-            <input type="text" class="form-control" name="mother_middle_name" placeholder="Middle Name" required>
+            <input type="text" class="form-control" name="mother_middle_name" placeholder="Middle Name" >
         </div>
         <div class="col">
             <label class="form-label">Mother's Last Name</label>
             <input type="text" class="form-control" name="mother_last_name" placeholder="Last Name" required>
         </div>
-        
-        
+
+
         `;
         if (docState.forWhom === 'other') {
             html += `<div class="col-md-12">
@@ -417,12 +439,51 @@ function renderApplicationForm() {
             <input type="text" class="form-control" name="deceased_last_name" required>
         </div>
         <div class="col-md-4">
+            <label class="form-label">Date of Death</label>
+            <input type="date" class="form-control" name="date_of_death" required>
+        </div>
+        <div class="col-md-8">
+            <label class="form-label">Place of Death</label>
+            <div class="row g-2">
+                <div class="col-3">
+                    <select class="form-control" name="death_country_id" id="death_country" >
+                        <option value="">Select Country</option>
+                    </select>
+                </div>
+                <div class="col-3 philippines-fields">
+                    <select class="form-control" name="death_region_id" id="death_region" > >
+                        <option value="">Select Region</option>
+                    </select>
+                </div>
+                <div class="col-3 philippines-fields">
+                    <select class="form-control" name="death_city_id" id="death_city" > >
+                        <option value="">Select City</option>
+                    </select>
+                </div>
+                <div class="col-3 philippines-fields">
+                    <select class="form-control" name="death_barangay_id" id="death_barangay" required >
+                        <option value="">Select Barangay</option>
+                    </select>
+                </div>
+                 <!-- Foreign fields -->
+                <div class="col-3 foreign-fields" style="display: none;">
+                    <input type="text" class="form-control" name="reference_number" placeholder="Reference Number" >
+                </div>
+                <div class="col-3 foreign-fields" style="display: none;">
+                    <input type="text" class="form-control" name="dispatch_number" placeholder="Dispatch Number" >
+                </div>
+                <div class="col-3 foreign-fields" style="display: none;">
+                    <input type="text" class="form-control" name="dispatch_date" placeholder="Dispatch Date (e.g. Jan 1, 2000)" >
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
             <label class="form-label">Deceased's Father's First Name</label>
             <input type="text" class="form-control" name="deceased_father_first_name" required>
         </div>
-        <div class="col-md-4">  
+        <div class="col-md-4">
             <label class="form-label">Deceased's Father's Middle Name</label>
-            <input type="text" class="form-control" name="deceased_father_middle_name" required>
+            <input type="text" class="form-control" name="deceased_father_middle_name" >
         </div>
         <div class="col-md-4">
             <label class="form-label">Deceased's Father's Last Name</label>
@@ -434,23 +495,207 @@ function renderApplicationForm() {
         </div>
         <div class="col-md-4">
             <label class="form-label">Deceased's Mother's Middle Name</label>
-            <input type="text" class="form-control" name="deceased_mother_middle_name" required>
+            <input type="text" class="form-control" name="deceased_mother_middle_name" >
         </div>
         <div class="col-md-4">
             <label class="form-label">Deceased's Mother's Last Name</label>
             <input type="text" class="form-control" name="deceased_mother_last_name" required>
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Date of Death</label>
-            <input type="date" class="form-control" name="date_of_death" required>
-        </div>
-        <div class="col-md-4">
-            <label class="form-label">Place of Death</label>
-            <input type="text" class="form-control" name="place_of_death" required>
         </div>`;
     }
     // Add more document types as needed...
     $('#application-form').html(html);
+
+ // Initialize cascading dropdowns AFTER the HTML is rendered
+    if (docState.documentType === 'death-certificate') {
+        // Use setTimeout to ensure DOM is fully updated
+        setTimeout(() => {
+            initializeCascadingDropdowns();
+            loadCountries(); // Make sure this populates the dropdown
+        }, 100);
+    }
+}
+
+
+function initializeCascadingDropdowns() {
+    // Load countries immediately
+    loadCountries();
+
+    // Remove any existing event listeners to prevent duplicates
+    $(document).off('change', '#death_country');
+    $(document).off('change', '#death_region');
+    $(document).off('change', '#death_city');
+
+    // Country change handler
+    $(document).on('change', '#death_country', function() {
+        const countryId = $(this).val();
+        const regionSelect = $('#death_region');
+        const citySelect = $('#death_city');
+        const barangaySelect = $('#death_barangay');
+
+        // Assume Philippines has countryId = 'PH' or whatever your backend returns
+        const philippinesCountryId = '1'; // <-- Set this to your actual PH country id
+
+        if (countryId === philippinesCountryId) {
+            $('.philippines-fields').show();
+            $('.foreign-fields').hide();
+
+             $('#death_region, #death_city, #death_barangay').attr('required', true);
+            $('.foreign-fields input').removeAttr('required');
+
+            // Reset and disable dependent dropdowns
+            regionSelect.html('<option value="">Select Region</option>');
+            citySelect.html('<option value="">Select City</option>');
+            barangaySelect.html('<option value="">Select Barangay</option>');
+            if (countryId) {
+                loadRegions(countryId);
+            }
+        } else if (countryId) {
+            $('.philippines-fields').hide();
+            $('.foreign-fields').show();
+
+            $('.foreign-fields input').attr('required', true);
+            $('#death_region, #death_city, #death_barangay').removeAttr('required');
+
+            // Optionally clear PH fields
+            regionSelect.val('');
+            citySelect.val('');
+            barangaySelect.val('');
+        } else {
+            // No country selected
+            $('.philippines-fields').hide();
+            $('.foreign-fields').hide();
+
+            // Remove required from all conditional fields
+            $('#death_region, #death_city, #death_barangay').removeAttr('required');
+            $('.foreign-fields input').removeAttr('required');
+        }
+    });
+
+    // Region change handler
+    $(document).on('change', '#death_region', function() {
+        const regionId = $(this).val();
+        const citySelect = $('#death_city');
+        const barangaySelect = $('#death_barangay');
+
+        // Reset dependent dropdowns
+        citySelect.html('<option value="">Select City</option>');
+        barangaySelect.html('<option value="">Select Barangay</option>');
+
+        if (regionId) {
+            loadCities(regionId);
+        }
+    });
+
+    // City change handler
+    $(document).on('change', '#death_city', function() {
+        const cityId = $(this).val();
+        const barangaySelect = $('#death_barangay');
+
+        // Reset barangay dropdown
+        barangaySelect.html('<option value="">Select Barangay</option>');
+
+        if (cityId) {
+            loadBarangays(cityId);
+        }
+    });
+}
+
+function loadCountries() {
+    $.ajax({
+        url: '/api/locations/countries',
+        method: 'GET',
+        success: function(countries) {
+            const countrySelect = $('#death_country');
+            if (countrySelect.length === 0) {
+                console.warn('Country select element not found');
+                return;
+            }
+
+            countrySelect.html('<option value="">Select Country</option>');
+
+            countries.forEach(country => {
+                countrySelect.append(`<option value="${country.id}">${country.name}</option>`);
+            });
+
+            console.log('Countries loaded successfully:', countries.length);
+        },
+        error: function(xhr) {
+            console.error('Error loading countries:', xhr);
+            console.error('Response:', xhr.responseText);
+            showToast('Error loading countries. Please try again.', 'error');
+        }
+    });
+}
+
+function loadRegions(countryId) {
+    $.ajax({
+        url: '/api/locations/regions',
+        method: 'GET',
+        data: { country_id: countryId },
+        success: function(regions) {
+            const regionSelect = $('#death_region');
+            regionSelect.html('<option value="">Select Region</option>');
+
+            regions.forEach(region => {
+                regionSelect.append(`<option value="${region.id}">${region.name}</option>`);
+            });
+
+            regionSelect.prop('disabled', false);
+        },
+        error: function(xhr) {
+            console.error('Error loading regions:', xhr);
+            showToast('Error loading regions. Please try again.', 'error');
+        }
+    });
+}
+
+function loadCities(regionId) {
+    $.ajax({
+        url: '/api/locations/cities',
+        method: 'GET',
+        data: { region_id: regionId },
+        success: function(cities) {
+            const citySelect = $('#death_city');
+            citySelect.html('<option value="">Select City</option>');
+
+            cities.forEach(city => {
+                citySelect.append(`<option value="${city.id}">${city.name}</option>`);
+            });
+
+            citySelect.prop('disabled', false);
+        },
+        error: function(xhr) {
+            console.error('Error loading cities:', xhr);
+            showToast('Error loading cities. Please try again.', 'error');
+        }
+    });
+}
+
+function loadBarangays(cityId) {
+    $.ajax({
+        url: '/api/locations/barangays',
+        method: 'GET',
+        data: { city_id: cityId },
+        success: function(barangays) {
+            const barangaySelect = $('#death_barangay');
+            barangaySelect.html('<option value="">Select Barangay</option>');
+
+            barangays.forEach(barangay => {
+                barangaySelect.append(`<option value="${barangay.id}">${barangay.name}</option>`);
+            });
+
+            barangaySelect.prop('disabled', false);
+        },
+        error: function(xhr) {
+            console.error('Error loading barangays:', xhr);
+            showToast('Error loading barangays. Please try again.', 'error');
+        }
+    });
+}
+
+function showToast(message, type = 'info') {
+    // Implement your toast notification here
+    console.log(`${type}: ${message}`);
 }
 
 function goToStep(step) {
