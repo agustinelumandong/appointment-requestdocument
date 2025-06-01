@@ -6,8 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('document_requests', function (Blueprint $table) {
@@ -18,8 +17,9 @@ return new class extends Migration
             $table->string('for_whom');
             $table->json('application_data');
             $table->string('purpose');
-            $table->string('delivery_method');
-            $table->string('contact_name');
+            $table->string('contact_first_name');
+            $table->string('contact_middle_name')->nullable();
+            $table->string('contact_last_name');
             $table->string('contact_phone');
             $table->string('contact_email');
             $table->date('claim_date');
@@ -32,5 +32,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('document_requests');
+
     }
-}; 
+};

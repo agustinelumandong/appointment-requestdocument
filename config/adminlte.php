@@ -326,48 +326,48 @@ return [
             'text' => ' All Appointments',
             'route' => 'appointments',
             'icon' => 'fas fa-calendar-check',
-            'can'  => 'appointments.view | appointments.create | appointments.edit | appointments.delete',
+            'can' => 'appointments.view | appointments.create | appointments.edit | appointments.delete',
 
         ],
 
-        
+
 
         [
             'text' => 'Categories',
             'icon' => 'fas fa-fw fa-folder',
-            'url'  => 'category*',
-            'can'  => 'categories.view | categories.create | categories.edit | categories.delete',
+            'url' => 'category*',
+            'can' => 'categories.view | categories.create | categories.edit | categories.delete',
             'submenu' => [
                 [
                     'text' => 'Add New',
                     'icon' => 'fas fa-fw fa-plus',
                     'route' => 'category.create',
-                    'can'   => 'categories.create'
+                    'can' => 'categories.create'
                 ],
                 [
                     'text' => 'View All',
                     'icon' => 'fas fa-fw fa-eye',
                     'route' => 'category.index',
-                    'can'   => 'categories.view'
+                    'can' => 'categories.view'
                 ],
 
             ],
         ],
         [
-            'text'    => 'Users',
-            'url'  => 'user*',
-            'icon'    => 'fas fa-fw fa-users',
-            'can'  => 'users.view | users.create | users.edit | users.delete',
+            'text' => 'Users',
+            'url' => 'user*',
+            'icon' => 'fas fa-fw fa-users',
+            'can' => 'users.view | users.create | users.edit | users.delete',
             'submenu' => [
                 [
                     'text' => 'Add New',
-                    'icon'    => 'fas fa-fw fa-plus',
-                    'route'  => 'user.create',
-                    'can'  => 'users.create',
+                    'icon' => 'fas fa-fw fa-plus',
+                    'route' => 'user.create',
+                    'can' => 'users.create',
                 ],
                 [
                     'text' => 'View All',
-                    'icon'    => 'fas fa-users',
+                    'icon' => 'fas fa-users',
                     'route' => 'user.index',
                 ],
 
@@ -376,29 +376,29 @@ return [
             ],
         ],
         [
-            'text'    => 'Services',
-            'url'  => 'service*',
-            'icon'    => 'fas fa-fw fa-briefcase',
-            'can'  => 'services.view | services.create | services.edit | services.delete',
+            'text' => 'Services',
+            'url' => 'service*',
+            'icon' => 'fas fa-fw fa-briefcase',
+            'can' => 'services.view | services.create | services.edit | services.delete',
             'submenu' => [
 
                 [
                     'text' => 'Create Service',
-                    'icon'    => 'fas fa-fw fa-plus',
-                    'route'  => 'service.create',
-                    'can'    => 'services.create'
+                    'icon' => 'fas fa-fw fa-plus',
+                    'route' => 'service.create',
+                    'can' => 'services.create'
                 ],
                 [
                     'text' => 'View All',
-                    'icon'    => 'fas fa-fw fa-eye',
-                    'route'  => 'service.index',
-                    'can'    => 'services.view'
+                    'icon' => 'fas fa-fw fa-eye',
+                    'route' => 'service.index',
+                    'can' => 'services.view'
                 ],
                 [
                     'text' => 'View Trash',
-                    'icon'    => 'fas fa-fw fa-trash',
-                    'route'  => 'service.trash',
-                    'can'    => 'services.view'
+                    'icon' => 'fas fa-fw fa-trash',
+                    'route' => 'service.trash',
+                    'can' => 'services.view'
                 ],
 
             ],
@@ -411,26 +411,52 @@ return [
         ],
         [
             'text' => 'Settings',
-            'route'  => 'setting',
+            'route' => 'setting',
             'icon' => 'fas fa-fw fa-cog',
-            'can'  => 'setting update',
+            'can' => 'setting update',
         ],
-        
+
         [
             'text' => 'Reports',
-            'url'  => 'admin/reports',
+            'url' => 'admin/reports',
             'icon' => 'fas fa-chart-line', // Optional icon
             'can' => 'view-reports',
         ],
-[
-        'text' => 'My Documents',
-    'url'  => 'admin/documents',
-    'icon' => 'fas fa-file-alt',
-    
-    
-],
+        [
+            'text' => 'My Documents',
+            'url' => 'admin/documents',
+            'icon' => 'fas fa-file-alt',
 
-        
+
+        ],
+        [
+            'text' => 'Document Requests',
+            'icon' => 'fas fa-fw fa-file-invoice',
+            'url' => 'admin/document-requests*',
+            'can' => 'document-requests.view | document-requests.create | document-requests.edit | document-requests.delete',
+            'submenu' => [
+                [
+                    'text' => 'View All Requests',
+                    'icon' => 'fas fa-fw fa-list',
+                    'route' => 'admin.document-requests.index',
+                    'can' => 'document-requests.view'
+                ],
+                [
+                    'text' => 'Pending Requests',
+                    'icon' => 'fas fa-fw fa-clock',
+                    'route' => 'admin.document-requests.pending',
+                    'can' => 'document-requests.view'
+                ],
+                [
+                    'text' => 'Request Statistics',
+                    'icon' => 'fas fa-fw fa-chart-bar',
+                    'route' => 'admin.document-requests.stats',
+                    'can' => 'document-requests.view'
+                ],
+            ],
+        ],
+
+
 
         // [
         //     'text' => 'multilevel',

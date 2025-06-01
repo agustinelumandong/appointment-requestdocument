@@ -12,13 +12,15 @@ final class DocumentRequest extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'reference_number',
         'document_type',
         'for_whom',
         'application_data',
         'purpose',
-        'delivery_method',
-        'contact_name',
+        'contact_first_name',
+        'contact_middle_name',
+        'contact_last_name',
         'contact_phone',
         'contact_email',
         'claim_date',
@@ -31,4 +33,12 @@ final class DocumentRequest extends Model
         'claim_date' => 'date',
         'claim_time' => 'datetime:H:i',
     ];
-} 
+
+    /**
+     * Get the user that owns the document request
+     */
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+}

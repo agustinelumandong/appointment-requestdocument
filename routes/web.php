@@ -99,6 +99,37 @@ Route::middleware(['auth'])->group(function () {
         return view('backend.documents.documents');
     })->name('admin.documents');
 
+    // Admin Document Request Routes
+    Route::prefix('admin/document-requests')->name('admin.document-requests.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\AdminDocumentRequestController::class, 'index'])
+            ->name('index')
+            ->middleware('permission:document-requests.view');
+
+        Route::get('/pending', [App\Http\Controllers\Admin\AdminDocumentRequestController::class, 'pending'])
+            ->name('pending')
+            ->middleware('permission:document-requests.view');
+
+        Route::get('/stats', [App\Http\Controllers\Admin\AdminDocumentRequestController::class, 'stats'])
+            ->name('stats')
+            ->middleware('permission:document-requests.view');
+
+        Route::get('/{documentRequest}', [App\Http\Controllers\Admin\AdminDocumentRequestController::class, 'show'])
+            ->name('show')
+            ->middleware('permission:document-requests.view');
+
+        Route::put('/{documentRequest}', [App\Http\Controllers\Admin\AdminDocumentRequestController::class, 'update'])
+            ->name('update')
+            ->middleware('permission:document-requests.edit');
+
+        Route::patch('/{documentRequest}/status', [App\Http\Controllers\Admin\AdminDocumentRequestController::class, 'updateStatus'])
+            ->name('updateStatus')
+            ->middleware('permission:document-requests.edit');
+
+        Route::delete('/{documentRequest}', [App\Http\Controllers\Admin\AdminDocumentRequestController::class, 'destroy'])
+            ->name('destroy')
+            ->middleware('permission:document-requests.delete');
+    });
+
 });
 
 

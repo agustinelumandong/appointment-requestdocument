@@ -7,7 +7,6 @@
         <div class="col-sm-6">
             <h1>All Apointments</h1>
         </div>
-
     </div>
 @stop
 
@@ -42,13 +41,13 @@
                         <div class="form-group ">
                             <label><strong>Status:</strong></label>
                             <select name="status" class="form-control" id="modalStatusSelect">
-                                
-                                
+
+
                                 <option value="Confirmed">Confirmed</option>
                                 <option value="Cancelled">Cancelled</option>
                                 <option value="Completed">Completed</option>
-                               
-                               
+
+
                                 <option value="No Show">No Show</option>
                             </select>
                         </div>

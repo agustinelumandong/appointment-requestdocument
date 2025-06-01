@@ -65,12 +65,12 @@
                         <div class="form-group">
                             <label><strong>Change Status:</strong></label>
                             <select name="status" class="form-control" id="modalStatusSelect">
-                                
-                                
+
+
                                 <option value="Confirmed">Confirmed</option>
                                 <option value="Cancelled">Cancelled</option>
                                 <option value="Completed">Completed</option>
-                                
+
                                 <option value="No Show">No Show</option>
                             </select>
                         </div>

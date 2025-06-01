@@ -4,14 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css"
         integrity="sha512-10/jx2EXwxxWqCLX/hHth/vu2KY3jCF70dCQB8TSgNjbCVAC/8vai53GfMDrO2Emgwccf2pJqxct9ehpzG+MTw=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
-  
+
 </head>
 
 <body>
@@ -108,22 +108,23 @@
                 <div class="booking-step" id="doc-step4">
                     <h3 class="mb-4">Purpose & Contact Info</h3>
                     <form id="purpose-contact-form" class="row g-3">
-                        <div class="col-md-6">
-                            <label for="purpose" class="form-label">Purpose</label>
-                            <input type="text" class="form-control" id="purpose" required>
+                        <h6>Contact Information</h6>
+                        <div class="col-md-4">
+                            <label for="contact_first_name" class="form-label">Your First Name</label>
+                            <input type="text" class="form-control" id="contact_first_name" required>
                         </div>
-                        <div class="col-md-6">
-                            <label for="delivery_method" class="form-label">Delivery Method</label>
-                            <select class="form-select" id="delivery_method" required>
-                                <option value="pickup">Pickup</option>
-                                <option value="courier">Courier</option>
-                            </select>
+                        <div class="col-md-4">
+                            <label for="contact_middle_name" class="form-label">Your Middle Name</label>
+                            <input type="text" class="form-control" id="contact_middle_name" required>
                         </div>
-                        <div class="col-md-6">
-                            <label for="contact_name" class="form-label">Contact Name</label>
-                            <input type="text" class="form-control" id="contact_name" required>
+                        <div class="col-md-4">
+                            <label for="contact_last_name" class="form-label">Your Last Name</label>
+                            <input type="text" class="form-control" id="contact_last_name" required>
                         </div>
-                        <div class="col-md-6">
+                        <div class="alert alert-secondary" role="alert">
+                            Show a valid ID when you claim your document. (National ID, Driver's License, etc.)
+                          </div>
+                        <div class="col-md-12">
                             <label for="contact_phone" class="form-label">Contact Phone</label>
                             <input type="tel" class="form-control" id="contact_phone" required>
                         </div>
@@ -131,19 +132,43 @@
                             <label for="contact_email" class="form-label">Contact Email</label>
                             <input type="email" class="form-control" id="contact_email" required>
                         </div>
+                        <div class="col-md-12">
+                            <label for="purpose" class="form-label">Purpose</label>
+                            <select class="form-select" id="purpose" required>
+                                <option value="">Select Purpose</option>
+                                <option value="Passport / Travel">Passport / Travel</option>
+                                <option value="School Requirement">School Requirement</option>
+                                <option value="Local Employment">Local Employment</option>
+                                <option value="Foreign Employment">Foreign Employment</option>
+                                <option value="Marriage">Marriage</option>
+                                <option value="Claims / Benefits / Loans">Claims / Benefits / Loans</option>
+                                <option value="Late Registration">Late Registration</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 mt-3" id="other_purpose_container" style="display: none;">
+                            <label for="other_purpose" class="form-label">Please specify other purpose</label>
+                            <textarea class="form-control" id="other_purpose" required></textarea>
+                        </div>
                     </form>
                 </div>
                 <!-- Step 5: Claiming Date/Time -->
                 <div class="booking-step" id="doc-step5">
-                    <h3 class="mb-4">Preferred Date/Time for Claiming</h3>
-                    <input type="date" id="claim_date" class="form-control mb-2" min="{{ now()->toDateString() }}" required>
-                    <input type="time" id="claim_time" class="form-control" required>
+                    <div class="row">
+                        <h3 class="mb-4">Preferred Date/Time for Claiming</h3>
+                        <div class="col-md-6">
+                            <input type="date" id="claim_date" class="form-control mb-2" min="{{ now()->toDateString() }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="time" id="claim_time" class="form-control" required>
+                        </div>
+                    </div>
                 </div>
                 <!-- Step 6: Review -->
                 <div class="booking-step" id="doc-step6">
                     <h3 class="mb-4">Review Application</h3>
                     <div id="application-summary"></div>
-                    <button id="submit-request" class="btn btn-success mt-3">Submit Request</button>
+
                 </div>
                 <!-- Confirmation Modal -->
                 <div class="modal fade" id="docRequestSuccessModal" tabindex="-1" aria-hidden="true">
@@ -178,6 +203,9 @@
                 <button class="btn btn-primary" id="doc-next-step">
                     Next <i class="bi bi-arrow-right"></i>
                 </button>
+                <button id="submit-request" class="btn btn-success mt-3" style="display: none;">
+                    Submit Request <i class="bi bi-message-square-check"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -196,9 +224,24 @@
         window.documentTypes = @json($documentTypes ?? []);
         window.documentRequestStoreUrl = "{{ route('document.request.store') }}";
         window.csrfToken = "{{ csrf_token() }}";
+        window.userId = @json(auth()->check() ? auth()->id() : null);
+        window.isAuthenticated = @json(auth()->check());
     </script>
     <script src="{{ asset('assets/js/document_request.js') }}"></script>
-    
+    <script>
+        $(document).on('change', '#purpose', function() {
+    if ($(this).val() === 'Others') {
+        $('#other_purpose_container').show();
+        $('#other_purpose').prop('required', true);
+    } else {
+        $('#other_purpose_container').hide();
+        $('#other_purpose').prop('required', false);
+            $('#other_purpose').val('');
+        }
+    });
+
+
+    </script>
 </body>
 
 </html>

@@ -5,8 +5,11 @@ let docState = {
     forWhom: null,
     applicationData: {},
     purpose: '',
-    delivery_method: '',
-    contact: {},
+    contact_first_name: '',
+    contact_middle_name: '',
+    contact_last_name: '',
+    contact_phone: '',
+    contact_email: '',
     claim_date: '',
     claim_time: ''
 };
@@ -35,76 +38,134 @@ $(document).ready(function() {
     });
     $('#document-types-container').html(docTypeHtml);
 
-    // Step 1: Select document type
+    // Step 1: Select document type with data persistence
     $(document).on('click', '.doc-type-card', function() {
         $('.doc-type-card').removeClass('border-primary');
         $(this).addClass('border-primary');
         docState.documentType = $(this).data('type');
+        // Save immediately when selection changes
+        saveCurrentStepData();
     });
 
-    // Step 2: For whom
+    // Step 2: For whom with data persistence
     $(document).on('click', '#for-whom-container button', function() {
         docState.forWhom = $(this).data('for');
+        // Save immediately when selection changes
+        saveCurrentStepData();
         goToStep(3);
     });
 
-    // Step navigation
+    // Step navigation with data persistence
     $('#doc-next-step').click(function() {
         if (!validateStep(docState.currentStep)) return;
         goToStep(docState.currentStep + 1);
     });
+
     $('#doc-prev-step').click(function() {
-        if (docState.currentStep > 1) goToStep(docState.currentStep - 1);
+        if (docState.currentStep > 1) {
+            // Save current data before going back
+            saveCurrentStepData();
+            goToStep(docState.currentStep - 1);
+        }
     });
 
-    // Step 3: Dynamic form
+    // Step 3: Dynamic form with auto-save
+    $(document).on('input change', '#application-form input, #application-form select, #application-form textarea', function() {
+        if (docState.currentStep === 3) {
+            saveCurrentStepData();
+        }
+    });
 
-
-    // Step 4: Purpose & Contact
-    $('#purpose-contact-form input, #purpose-contact-form select').on('input change', function() {
+    // Step 4: Purpose & Contact with enhanced data persistence
+    $(document).on('input change', '#purpose-contact-form input, #purpose-contact-form select', function() {
         const id = $(this).attr('id');
         if (id.startsWith('contact_')) {
+            if (!docState.contact) docState.contact = {};
             docState.contact[id.replace('contact_', '')] = $(this).val();
         } else {
             docState[id] = $(this).val();
         }
+        if (docState.currentStep === 4) {
+            saveCurrentStepData();
+        }
     });
 
-    // Step 5: Date/Time
-    $('#claim_date, #claim_time').on('change', function() {
+    // Step 5: Date/Time with enhanced data persistence
+    $(document).on('change', '#claim_date, #claim_time', function() {
         docState[$(this).attr('id')] = $(this).val();
+        if (docState.currentStep === 5) {
+            saveCurrentStepData();
+        }
     });
 
 
 
-    // Submit
+    // Submit with all collected data
     $('#submit-request').click(function() {
+        // Check if user is authenticated
+        if (!window.isAuthenticated || !window.userId) {
+            alert('You must be logged in to submit a document request. Please log in and try again.');
+            window.location.href = '/login';
+            return;
+        }
+
+        // Final save before submission
+        saveCurrentStepData();
+
         // Gather all data
         const data = {
+            user_id: window.userId,
             document_type: docState.documentType,
             for_whom: docState.forWhom,
             application_data: docState.applicationData,
-            purpose: $('#purpose').val(),
-            delivery_method: $('#delivery_method').val(),
-            contact_name: $('#contact_name').val(),
-            contact_phone: $('#contact_phone').val(),
-            contact_email: $('#contact_email').val(),
-            claim_date: $('#claim_date').val(),
-            claim_time: $('#claim_time').val(),
+            purpose: docState.purpose || $('#purpose').val(),
+            contact_first_name: docState.contact_first_name || $('#contact_first_name').val(),
+            contact_middle_name: docState.contact_middle_name || $('#contact_middle_name').val(),
+            contact_last_name: docState.contact_last_name || $('#contact_last_name').val(),
+            contact_phone: docState.contact_phone || $('#contact_phone').val(),
+            contact_email: docState.contact_email || $('#contact_email').val(),
+            claim_date: docState.claim_date || $('#claim_date').val(),
+            claim_time: docState.claim_time || $('#claim_time').val(),
             _token: window.csrfToken
         };
-        //submit data to the server
+
+        // Log all data before submission
+        console.log('Submitting document request with data:', data);
+
+        // Submit data to the server
         $.post(window.documentRequestStoreUrl, data, function(response) {
             if (response.success) {
                 $('#doc-ref-number').text(response.reference_number);
                 new bootstrap.Modal('#docRequestSuccessModal').show();
+                // Redirect to dashboard after successful submission
+                    window.location.href = '/dashboard';
             } else {
-                alert('Submission failed.');
+                alert('Submission failed: ' + (response.message || 'Unknown error'));
             }
+        }).fail(function(xhr) {
+            console.error('Error submitting document request:', xhr.responseJSON);
+            let errorMessage = 'Submission failed.';
+
+            if (xhr.status === 401) {
+                errorMessage = 'Authentication required. Please log in and try again.';
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                const errors = Object.values(xhr.responseJSON.errors).flat();
+                errorMessage = 'Validation errors: ' + errors.join(', ');
+            }
+
+            alert(errorMessage);
         });
     });
 
     function validateStep(step) {
+        // Save current step data before validation
+        saveCurrentStepData();
+
         switch (step) {
             case 1:
                 if (!docState.documentType) { alert('Select a document type.'); return false; }
@@ -152,22 +213,103 @@ $(document).ready(function() {
 
 // Step 6: Review
 function renderSummary() {
-    let html = `<ul class="list-group">`;
-    html += `<li class="list-group-item"><strong>Document Type:</strong> ${docState.documentType}</li>`;
-    html += `<li class="list-group-item"><strong>For:</strong> ${docState.forWhom === 'self' ? 'Myself' : 'Someone Else'}</li>`;
-    // Application data
+    let html = `<div class="summary-container">`;
+
+    // Document Type Section
+    html += `
+        <div class="summary-section mb-4">
+            <h4 class="section-title text-secondary mb-3">Document Information</h4>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="label">Document Type</span>
+                    <span class="value fw-bold">${docState.documentType}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="label">Requested For</span>
+                    <span class="value fw-bold">${docState.forWhom === 'self' ? 'Myself' : 'Someone Else'}</span>
+                </li>
+            </ul>
+        </div>`;
+
+    // Application Data Section
+    html += `
+        <div class="summary-section mb-4">
+            <h4 class="section-title text-secondary mb-3">Application Details</h4>
+            <ul class="list-group">`;
+
     $('#application-form').serializeArray().forEach(f => {
         const formattedName = f.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        html += `<li class="list-group-item"><strong>${formattedName}:</strong> ${f.value}</li>`;
+        html += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span class="label">${formattedName}</span>
+                <span class="value fw-bold">${f.value}</span>
+            </li>`;
         docState.applicationData[f.name] = f.value;
     });
-    html += `<li class="list-group-item"><strong>Purpose:</strong> ${$('#purpose').val()}</li>`;
-    html += `<li class="list-group-item"><strong>Delivery:</strong> ${$('#delivery_method').val()}</li>`;
-    html += `<li class="list-group-item"><strong>Contact Name:</strong> ${$('#contact_name').val()}</li>`;
-    html += `<li class="list-group-item"><strong>Contact Phone:</strong> ${$('#contact_phone').val()}</li>`;
-    html += `<li class="list-group-item"><strong>Contact Email:</strong> ${$('#contact_email').val()}</li>`;
-    html += `<li class="list-group-item"><strong>Claim Date/Time:</strong> ${$('#claim_date').val()} ${$('#claim_time').val()}</li>`;
-    html += `</ul>`;
+
+    html += `</ul></div>`;
+
+    // Contact Information Section
+    html += `
+        <div class="summary-section mb-4">
+            <h4 class="section-title text-secondary mb-3">Contact Information</h4>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="label">Purpose</span>
+                    <span class="value fw-bold">${$('#purpose').val()}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="label">Contact Name</span>
+                    <span class="value fw-bold">${$('#contact_first_name').val()} ${$('#contact_middle_name').val()} ${$('#contact_last_name').val()}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="label">Contact Phone</span>
+                    <span class="value fw-bold">${$('#contact_phone').val()}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="label">Contact Email</span>
+                    <span class="value fw-bold">${$('#contact_email').val()}</span>
+                </li>
+            </ul>
+        </div>`;
+
+    // Claim Information Section
+    html += `
+        <div class="summary-section">
+            <h4 class="section-title text-secondary mb-3">Claim Information</h4>
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="label">Claim Date/Time</span>
+                    <span class="value fw-bold">${$('#claim_date').val()} ${$('#claim_time').val()}</span>
+                </li>
+            </ul>
+        </div>`;
+
+    html += `</div>`;
+
+    // Add some custom styles
+    html += `
+        <style>
+            .summary-container {
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            .section-title {
+                font-size: 1.25rem;
+                border-bottom: 2px solid #e9ecef;
+                padding-bottom: 0.5rem;
+            }
+            .list-group-item {
+                padding: 1rem;
+            }
+            .label {
+                color: #6c757d;
+            }
+            .value {
+                color: #212529;
+            }
+        </style>`;
+
     $('#application-summary').html(html);
 }
 
@@ -510,7 +652,7 @@ function renderApplicationForm() {
         // Use setTimeout to ensure DOM is fully updated
         setTimeout(() => {
             initializeCascadingDropdowns();
-            loadCountries(); // Make sure this populates the dropdown
+            // Don't call loadCountries separately - it's called in initializeCascadingDropdowns
         }, 100);
     }
 }
@@ -569,6 +711,11 @@ function initializeCascadingDropdowns() {
             $('#death_region, #death_city, #death_barangay').removeAttr('required');
             $('.foreign-fields input').removeAttr('required');
         }
+
+        // Auto-save when country changes
+        if (docState.currentStep === 3) {
+            saveCurrentStepData();
+        }
     });
 
     // Region change handler
@@ -584,6 +731,11 @@ function initializeCascadingDropdowns() {
         if (regionId) {
             loadCities(regionId);
         }
+
+        // Auto-save when region changes
+        if (docState.currentStep === 3) {
+            saveCurrentStepData();
+        }
     });
 
     // City change handler
@@ -596,6 +748,27 @@ function initializeCascadingDropdowns() {
 
         if (cityId) {
             loadBarangays(cityId);
+        }
+
+        // Auto-save when city changes
+        if (docState.currentStep === 3) {
+            saveCurrentStepData();
+        }
+    });
+
+    // Barangay change handler
+    $(document).on('change', '#death_barangay', function() {
+        // Auto-save when barangay changes
+        if (docState.currentStep === 3) {
+            saveCurrentStepData();
+        }
+    });
+
+    // Foreign fields change handler
+    $(document).on('input change', '.foreign-fields input', function() {
+        // Auto-save when foreign fields change
+        if (docState.currentStep === 3) {
+            saveCurrentStepData();
         }
     });
 }
@@ -698,46 +871,360 @@ function showToast(message, type = 'info') {
     console.log(`${type}: ${message}`);
 }
 
+// Add data persistence functions
+function saveCurrentStepData() {
+    switch (docState.currentStep) {
+        case 1:
+            // Document type is already saved in docState.documentType
+            console.log('Saved document type:', docState.documentType);
+            break;
+        case 2:
+            // For whom is already saved in docState.forWhom
+            console.log('Saved for whom:', docState.forWhom);
+            break;
+        case 3:
+            // Save application form data
+            const formData = {};
+            const applicationForm = $('#application-form');
+
+            if (applicationForm.length === 0) {
+                console.warn('Application form not found, cannot save step 3 data');
+                break;
+            }
+
+            applicationForm.find('input, select, textarea').each(function() {
+                const element = $(this);
+                const name = element.attr('name');
+                const type = element.attr('type');
+
+                if (name) {
+                    if (type === 'radio' || type === 'checkbox') {
+                        if (element.is(':checked')) {
+                            formData[name] = element.val();
+                        }
+                    } else {
+                        formData[name] = element.val();
+                    }
+                }
+            });
+            docState.applicationData = formData;
+            console.log('Saved application data:', formData);
+
+            // Extra logging for death certificate location data
+            if (docState.documentType === 'death-certificate') {
+                console.log('Death certificate location data saved:', {
+                    country: formData['death_country_id'],
+                    region: formData['death_region_id'],
+                    city: formData['death_city_id'],
+                    barangay: formData['death_barangay_id'],
+                    reference: formData['reference_number'],
+                    dispatch: formData['dispatch_number']
+                });
+            }
+
+            break;
+        case 4:
+            // Save purpose and contact data
+            docState.purpose = $('#purpose').val();
+            docState.contact_first_name = $('#contact_first_name').val();
+            docState.contact_middle_name = $('#contact_middle_name').val();
+            docState.contact_last_name = $('#contact_last_name').val();
+            docState.contact_phone = $('#contact_phone').val();
+            docState.contact_email = $('#contact_email').val();
+            console.log('Saved contact data:', docState);
+            break;
+        case 5:
+            // Save claim date and time
+            docState.claim_date = $('#claim_date').val();
+            docState.claim_time = $('#claim_time').val();
+            console.log('Saved claim data:', { date: docState.claim_date, time: docState.claim_time });
+            break;
+    }
+}
+
+function restoreStepData(step) {
+    switch (step) {
+        case 1:
+            // Restore document type selection
+            if (docState.documentType) {
+                setTimeout(() => {
+                    $('.doc-type-card').removeClass('border-primary');
+                    $(`.doc-type-card[data-type="${docState.documentType}"]`).addClass('border-primary');
+                    console.log('Restored document type:', docState.documentType);
+                }, 50);
+            }
+            break;
+        case 2:
+            // Restore for whom selection - visual indication if needed
+            if (docState.forWhom) {
+                setTimeout(() => {
+                    $(`#for-whom-container button[data-for="${docState.forWhom}"]`).addClass('btn-primary').removeClass('btn-outline-primary btn-outline-secondary');
+                    console.log('Restored for whom:', docState.forWhom);
+                }, 100);
+            }
+            break;
+        case 3:
+            // Restore application form data
+            if (Object.keys(docState.applicationData).length > 0) {
+                setTimeout(() => {
+                    // Handle death certificate location fields specially
+                    if (docState.documentType === 'death-certificate') {
+                        restoreDeathCertificateLocationData();
+                    } else {
+                        // Regular form restoration for other document types
+                        restoreRegularFormData();
+                    }
+                    console.log('Restored application data');
+                }, 200);
+            }
+            break;
+        case 4:
+            // Restore purpose and contact data
+            setTimeout(() => {
+                $('#purpose').val(docState.purpose || '');
+                $('#contact_first_name').val(docState.contact_first_name || '');
+                $('#contact_middle_name').val(docState.contact_middle_name || '');
+                $('#contact_last_name').val(docState.contact_last_name || '');
+                $('#contact_phone').val(docState.contact_phone || '');
+                $('#contact_email').val(docState.contact_email || '');
+                console.log('Restored contact data');
+            }, 50);
+            break;
+        case 5:
+            // Restore claim date and time
+            setTimeout(() => {
+                $('#claim_date').val(docState.claim_date || '');
+                $('#claim_time').val(docState.claim_time || '');
+                console.log('Restored claim data');
+            }, 50);
+            break;
+    }
+}
+
+// Helper function to restore regular form data (non-death certificate)
+function restoreRegularFormData() {
+    Object.keys(docState.applicationData).forEach(name => {
+        const element = $(`[name="${name}"]`);
+        const value = docState.applicationData[name];
+
+        if (element.length > 0 && value) {
+            if (element.attr('type') === 'radio') {
+                element.filter(`[value="${value}"]`).prop('checked', true);
+            } else if (element.attr('type') === 'checkbox') {
+                element.prop('checked', value === element.val());
+            } else {
+                element.val(value);
+            }
+        }
+    });
+}
+
+// Helper function to restore death certificate location data with cascading dropdowns
+function restoreDeathCertificateLocationData() {
+    console.log('Restoring death certificate data:', docState.applicationData);
+
+    // First restore all non-location fields
+    Object.keys(docState.applicationData).forEach(name => {
+        if (!name.includes('death_country') && !name.includes('death_region') &&
+            !name.includes('death_city') && !name.includes('death_barangay')) {
+
+            const element = $(`[name="${name}"]`);
+            const value = docState.applicationData[name];
+
+            if (element.length > 0 && value) {
+                if (element.attr('type') === 'radio') {
+                    element.filter(`[value="${value}"]`).prop('checked', true);
+                } else if (element.attr('type') === 'checkbox') {
+                    element.prop('checked', value === element.val());
+                } else {
+                    element.val(value);
+                }
+            }
+        }
+    });
+
+    // Handle location fields with proper cascading - wait for countries to load first
+    const countryId = docState.applicationData['death_country_id'];
+    const regionId = docState.applicationData['death_region_id'];
+    const cityId = docState.applicationData['death_city_id'];
+    const barangayId = docState.applicationData['death_barangay_id'];
+
+    console.log('Location data to restore:', { countryId, regionId, cityId, barangayId });
+
+    if (countryId) {
+        // Wait for countries to be loaded, then set the country
+        waitForCountriesAndRestore(countryId, regionId, cityId, barangayId);
+    }
+
+    // Restore foreign fields if they exist
+    ['reference_number', 'dispatch_number', 'dispatch_date'].forEach(fieldName => {
+        const value = docState.applicationData[fieldName];
+        if (value) {
+            $(`[name="${fieldName}"]`).val(value);
+        }
+    });
+}
+
+// Helper function to wait for countries to load and then restore location data
+function waitForCountriesAndRestore(countryId, regionId, cityId, barangayId) {
+    const checkCountries = () => {
+        const countrySelect = $('#death_country');
+        if (countrySelect.length > 0 && countrySelect.find('option').length > 1) {
+            // Countries are loaded, now set the country value
+            console.log('Countries loaded, setting country:', countryId);
+            countrySelect.val(countryId);
+
+            // Trigger change event to show appropriate fields
+            countrySelect.trigger('change');
+
+            // If Philippines (assuming ID = 1), restore cascading selections
+            if (countryId === '1' && regionId) {
+                // Wait for regions to load, then set region
+                setTimeout(() => {
+                    waitForRegionsAndRestore(regionId, cityId, barangayId);
+                }, 500);
+            }
+        } else {
+            // Countries not loaded yet, try again
+            console.log('Countries not loaded yet, waiting...');
+            setTimeout(checkCountries, 100);
+        }
+    };
+
+    checkCountries();
+}
+
+// Helper function to wait for regions to load and restore region data
+function waitForRegionsAndRestore(regionId, cityId, barangayId) {
+    const checkRegions = () => {
+        const regionSelect = $('#death_region');
+        if (regionSelect.length > 0 && regionSelect.find('option').length > 1) {
+            console.log('Regions loaded, setting region:', regionId);
+            regionSelect.val(regionId);
+            regionSelect.trigger('change');
+
+            if (cityId) {
+                setTimeout(() => {
+                    waitForCitiesAndRestore(cityId, barangayId);
+                }, 500);
+            }
+        } else {
+            console.log('Regions not loaded yet, waiting...');
+            setTimeout(checkRegions, 100);
+        }
+    };
+
+    checkRegions();
+}
+
+// Helper function to wait for cities to load and restore city data
+function waitForCitiesAndRestore(cityId, barangayId) {
+    const checkCities = () => {
+        const citySelect = $('#death_city');
+        if (citySelect.length > 0 && citySelect.find('option').length > 1) {
+            console.log('Cities loaded, setting city:', cityId);
+            citySelect.val(cityId);
+            citySelect.trigger('change');
+
+            if (barangayId) {
+                setTimeout(() => {
+                    waitForBarangaysAndRestore(barangayId);
+                }, 500);
+            }
+        } else {
+            console.log('Cities not loaded yet, waiting...');
+            setTimeout(checkCities, 100);
+        }
+    };
+
+    checkCities();
+}
+
+// Helper function to wait for barangays to load and restore barangay data
+function waitForBarangaysAndRestore(barangayId) {
+    const checkBarangays = () => {
+        const barangaySelect = $('#death_barangay');
+        if (barangaySelect.length > 0 && barangaySelect.find('option').length > 1) {
+            console.log('Barangays loaded, setting barangay:', barangayId);
+            barangaySelect.val(barangayId);
+        } else {
+            console.log('Barangays not loaded yet, waiting...');
+            setTimeout(checkBarangays, 100);
+        }
+    };
+
+    checkBarangays();
+}
+
 function goToStep(step) {
     console.log('Going to step:', step);
+
+    // Save current step data before navigating
+    if (docState.currentStep !== step) {
+        saveCurrentStepData();
+    }
+
+    // Update UI
     $(".booking-step").removeClass("active");
     $(`#doc-step${step}`).addClass("active");
 
+    // Update step indicators if they exist
     $(".step").removeClass("active completed");
     for (let i = 1; i <= 6; i++) {
         if (i < step) {
-        $(`.step[data-step="${i}"]`).addClass("completed");
+            $(`.step[data-step="${i}"]`).addClass("completed");
         } else if (i === step) {
             $(`.step[data-step="${i}"]`).addClass("active");
         }
     }
 
-    docState.currentStep = step; // <-- use docState, not requestState
-    updateNavigationButtons();
-    updateProgressBar();
+    docState.currentStep = step;
 
-    // If on application form step, render it
-    if(step === 2){
+    // Update navigation buttons
+    $('#doc-prev-step').prop('disabled', step === 1);
+    $('#doc-next-step').toggle(step < 6);
+
+    // Render step content and restore data
+    if (step === 1) {
+        // Document type selection is already rendered, just restore selection
+        restoreStepData(step);
+    } else if (step === 2) {
         renderForWhom();
-    }else if (step === 3) {
+        restoreStepData(step);
+    } else if (step === 3) {
         renderApplicationForm();
+        restoreStepData(step);
+    } else if (step === 4) {
+        restoreStepData(step);
+    } else if (step === 5) {
+        hideSubmitButton();
+        restoreStepData(step);
     } else if (step === 6) {
+        showSubmitButton();
         renderSummary();
     }
 
-    $(".booking-container")[0].scrollIntoView({ behavior: "smooth" });
+    // Scroll to form if container exists
+    if ($(".booking-container").length > 0) {
+        $(".booking-container")[0].scrollIntoView({ behavior: "smooth" });
+    }
 }
 
-function updateProgressBar() {
-    const progress = ((docState.currentStep - 1) / 5) * 100;
-    $(".progress-bar-steps .progress").css("width", `${progress}%`);
+function showSubmitButton() {
+    $('#submit-request').removeAttr('style');
+}
+
+function hideSubmitButton() {
+    $('#submit-request').css('display', 'none');
 }
 
 function updateNavigationButtons() {
-    $("#doc-prev-step").prop("disabled", docState.currentStep === 1);
-    if (docState.currentStep === 6) {
-        $("#doc-next-step").hide();
-    } else {
-        $("#doc-next-step").show();
-    }
+    $('#doc-prev-step').prop('disabled', docState.currentStep === 1);
+    $('#doc-next-step').toggle(docState.currentStep < 6);
+}
+
+function updateProgressBar() {
+    // Update progress bar if it exists
+    const progress = (docState.currentStep / 6) * 100;
+    $('.progress-bar').css('width', progress + '%');
 }
