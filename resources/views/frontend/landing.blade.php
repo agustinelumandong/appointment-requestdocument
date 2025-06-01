@@ -129,7 +129,7 @@
                 with our new digital scheduling system. Set Up Your Appointment Today.
             </p>
             <div class="mt-4 d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
-                
+
                 <div class="position-relative d-inline-block">
     <a href="{{ route('home') }}" class="btn btn-danger btn-lg rounded-pill px-4">
         <i class="bi bi-person-fill"></i> Book an Appointment
@@ -139,7 +139,7 @@
         <svg width="80" height="80" viewBox="0 0 100 100" class="curved-svg">
             <path d="M90,70 Q20,40 80,10" stroke="#001f3f" stroke-width="2" fill="none" marker-end="url(#arrowhead)" />
             <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                <marker id="arrowhead" markerWidth="10" markerHeight="7"
                         refX="0" refY="3.5" orient="auto">
                     <polygon points="0 0, 10 3.5, 0 7" fill="#001f3f" />
                 </marker>
@@ -148,7 +148,7 @@
         <div class="arrow-text">No login needed</div>
     </div>
 </div>
-                <a href="{{ route('login') }}" class="btn btn-outline-dark btn-lg rounded-pill px-4"> Request a Document</a>
+                <a href="{{ route('document.request') }}" class="btn btn-outline-dark btn-lg rounded-pill px-4"> Request a Document</a>
             </div>
         </div>
         <div class="text-center">

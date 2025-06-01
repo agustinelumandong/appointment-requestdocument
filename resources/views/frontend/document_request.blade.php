@@ -18,7 +18,7 @@
     <header class="header-section">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container">
-                <a class="navbar-brand" href="#">
+                <a class="navbar-brand" href="{{ route('landing') }}">
                     <img src="{{ asset('uploads/images/logo/lgu.png') }}" alt="Logo" height="50"> Requisition and Appointment System
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">

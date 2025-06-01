@@ -23,7 +23,7 @@
     <header class="header-section">
         <nav class="navbar navbar-expand-lg navbar-light">
             <div class="container">
-                <a class="navbar-brand" href="#">
+                <a class="navbar-brand" href="{{ route('landing') }}">
                     <img src="{{ asset('uploads/images/logo/lgu.png') }}" alt="Logo" height="50"> Requisition and Appointment System
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -305,10 +305,10 @@
     </div>
 
 
-    
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-   
+
 
     <script src="{{ asset('assets/js/dashboard.js') }}"></script>
 <script>
@@ -318,7 +318,7 @@
        window.employees = @json($employees);
 </script>
 
-    
+
     @if ($setting->footer)
         {!! $setting->footer !!}
     @endif
